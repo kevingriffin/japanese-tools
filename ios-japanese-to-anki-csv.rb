@@ -1,3 +1,4 @@
+#! /usr/bin/env ruby
 require "csv"
 
 Entry = Struct.new(:word, :reading, :meaning)
