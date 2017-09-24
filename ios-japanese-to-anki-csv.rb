@@ -14,7 +14,9 @@ class Parser
     end
 
     def strip_footer(text)
-      text.chomp("\n\n\n\nCreated with Japanese for iOS®\n\n")
+      # Remove any excess newlines, then the footer, then space between
+      # the footer and the last entry.
+      text.rstrip.chomp("Created with Japanese for iOS®").rstrip
     end
 
     def break_into_paragraphs(text)
@@ -48,15 +50,38 @@ class Parser
 end
 
 class Output
+  def self.csv_row(entry)
+    [entry.word, entry.meaning, entry.reading]
+  end
+
+  def self.run(entries)
+    output = CSV.generate do |csv|
+      entries.each do |entry|
+        csv << csv_row(entry)
+      end
+    end
+
+    STDOUT.print(output)
+    STDOUT.flush
+  end
+end
+
+class FileOutput < Output
   def self.run(output_filename, entries)
     CSV.open(output_filename, "wb") do |csv|
       entries.each do |entry|
-        csv << [entry.word, entry.meaning, entry.reading]
+        csv << csv_row(entry)
       end
     end
   end
 end
 
 if __FILE__ == $0
-  Output.run(ARGV[1], Parser.run(ARGV[0]))
+  if ARGV.count == 1
+    Output.run(Parser.run(ARGV[0]))
+  elsif ARGV.count == 2
+    FileOutput.run(ARGV[1], Parser.run(ARGV[0]))
+  else
+    puts "Wrong number of arguments. <input> or <input> <output>"
+  end
 end
